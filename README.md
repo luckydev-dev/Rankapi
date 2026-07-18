@@ -1,6 +1,6 @@
 # RankApi
 
-Paper 1.21.4 plugin that allows your website to grant LuckPerms ranks through an HTTP API.
+Paper 1.21.11 plugin that allows your website to grant LuckPerms ranks through an HTTP API.
 
 ## Build
 
@@ -13,7 +13,7 @@ mvn clean package
 Jar output:
 
 ```text
-target/Rankapi-1.0.jar
+target/Rankapi-1.1.jar
 ```
 
 ## API

@@ -22,6 +22,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -400,13 +401,21 @@ public class RankApiPlugin extends JavaPlugin implements Listener {
             if (isRemoteVersionNewer(pluginVersion, remoteVersion)) {
                 logInfo("New plugin version available: " + remoteVersion + ". Downloading update...");
                 if (downloadUpdateJar(downloadUrl, remoteVersion)) {
-                    logInfo("Downloaded update for version " + remoteVersion + ". Restart server to apply the update.");
+                    logInfo("Installed update for version " + remoteVersion + ". Restart server to load the new jar.");
                 }
             } else {
                 logDebug("Plugin is up to date.");
             }
         } catch (Exception ex) {
             logWarn("Auto-update check failed: " + ex.getMessage());
+        }
+    }
+
+    private void moveReplacing(Path source, Path target) throws IOException {
+        try {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (java.nio.file.AtomicMoveNotSupportedException ex) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -458,9 +467,22 @@ public class RankApiPlugin extends JavaPlugin implements Listener {
                 return false;
             }
 
-            Path target = pluginFile.toPath().getParent().resolve(pluginFileName + ".new");
-            Files.write(target, response.body(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
-            savePluginLog("AUTO_UPDATE", "Downloaded version " + remoteVersion + " to " + target);
+            Path pluginPath = pluginFile.toPath();
+            Path pluginDirectory = pluginPath.getParent();
+            if (pluginDirectory == null) {
+                logWarn("Unable to resolve plugin directory for update.");
+                return false;
+            }
+
+            Path downloadTarget = pluginDirectory.resolve(pluginFileName + ".download");
+            Path backupTarget = pluginDirectory.resolve(pluginFileName + ".bak");
+
+            Files.write(downloadTarget, response.body(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+            if (Files.exists(pluginPath)) {
+                Files.copy(pluginPath, backupTarget, StandardCopyOption.REPLACE_EXISTING);
+            }
+            moveReplacing(downloadTarget, pluginPath);
+            savePluginLog("AUTO_UPDATE", "Installed version " + remoteVersion + " to " + pluginPath + " and backed up the previous jar to " + backupTarget);
             return true;
         } catch (Exception ex) {
             logWarn("Failed to download update: " + ex.getMessage());
