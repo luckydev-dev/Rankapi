@@ -1,5 +1,7 @@
 api:
   base-url: "https://your-app-domain.run.app"
+  # Used to fetch only this server's pending orders.
+  server-name: "servername"
   interval-seconds: 60
 
 # Optional secret header sent with requests

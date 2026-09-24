@@ -16,6 +16,18 @@ Jar output:
 target/Rankapi-1.1.jar
 ```
 
+## Configuration
+
+Set `api.server-name` in `plugins/RankApi/config.yml` to the server identifier
+used by your API. The plugin requests pending orders using:
+
+```text
+GET /api/plugin/orders?pending=true&server=servername
+```
+
+The configured server name is URL-encoded before it is sent. Leave it blank
+only when connecting to an API that does not support server-specific orders.
+
 ## API
 
 POST:
