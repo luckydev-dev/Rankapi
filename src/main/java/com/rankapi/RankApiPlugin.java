@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -35,6 +36,7 @@ public class RankApiPlugin extends JavaPlugin implements Listener {
     private static final String AUTORUN_FILE_NAME = "autorun";
 
     private String baseUrl;
+    private String serverName;
     private int intervalSeconds;
     private boolean debug;
     private String apiSecret;
@@ -69,6 +71,7 @@ public class RankApiPlugin extends JavaPlugin implements Listener {
     private void loadConfig() {
         this.baseUrl = getConfig().getString("api.base-url", "");
         if (this.baseUrl.endsWith("/")) this.baseUrl = this.baseUrl.substring(0, this.baseUrl.length() - 1);
+        this.serverName = getConfig().getString("api.server-name", "").trim();
         this.intervalSeconds = getConfig().getInt("api.interval-seconds", 60);
         this.debug = getConfig().getBoolean("debug", true);
         this.apiSecret = getConfig().getString("api.secret", "");
@@ -161,6 +164,9 @@ public class RankApiPlugin extends JavaPlugin implements Listener {
 
         try {
             String url = baseUrl + "/api/plugin/orders?pending=true";
+            if (!serverName.isBlank()) {
+                url += "&server=" + URLEncoder.encode(serverName, StandardCharsets.UTF_8);
+            }
             HttpRequest.Builder reqBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
